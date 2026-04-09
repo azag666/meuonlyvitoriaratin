@@ -260,7 +260,7 @@
                             <h4 class="font-bold text-base">PACK VIP</h4>
                             <p class="text-xs text-of-gray mt-0.5">Desbloqueio imediato de todo o conteúdo sem censura.</p>
                         </div>
-                        <div class="text-right pr-6">
+                        <div class="text-right pr-6 shrink-0">
                             <span class="font-bold text-lg text-of-blue">R$ 16,99</span>
                         </div>
                         <div class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 border-of-blue bg-of-blue flex items-center justify-center transition-all" id="check-fixed">
@@ -268,25 +268,22 @@
                         </div>
                     </label>
 
-                    <label class="relative flex flex-col p-4 border rounded-xl cursor-pointer transition-all duration-200 border-of-border bg-white" id="card-custom">
-                        <div class="flex items-center w-full">
-                            <input type="radio" name="package" value="custom" class="peer hidden" onchange="updateSelection()">
-                            <div class="flex-1">
-                                <h4 class="font-bold text-base">Escolher Valor como Presente ❤️</h4>
-                                <p class="text-xs text-of-gray mt-0.5">Escolha o valor que deseja enviar via PIX.</p>
-                            </div>
-                            <div class="absolute right-4 top-4 w-5 h-5 rounded-full border-2 border-of-border flex items-center justify-center transition-all" id="check-custom">
-                                <i class="fa-solid fa-check text-white text-[10px] opacity-0" id="icon-custom"></i>
-                            </div>
+                    <label class="relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 border-of-border bg-white" id="card-premium">
+                        <input type="radio" name="package" value="premium" class="peer hidden" onchange="updateSelection()">
+                        <div class="absolute -top-2.5 left-4 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                            Completo 🔥
                         </div>
-                        
-                        <div id="custom-inputs" class="hidden mt-4 pt-4 border-t border-blue-100 flex gap-2 items-center">
-                            <div class="flex-1 relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-of-gray font-bold text-sm">R$</span>
-                                <input type="number" id="input-brl" placeholder="0.00" min="5" step="1" class="w-full pl-9 pr-2 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-bold text-of-text outline-none focus:border-of-blue focus:ring-1 focus:ring-of-blue transition-all" oninput="handleCustomInput()">
-                            </div>
+                        <div class="flex-1 pr-2">
+                            <h4 class="font-bold text-sm leading-tight">Chamada de vídeo + Whatsapp + VIP Vitalício</h4>
+                        </div>
+                        <div class="text-right pr-6 shrink-0">
+                            <span class="font-bold text-lg text-of-blue">R$ 67,00</span>
+                        </div>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 border-of-border flex items-center justify-center transition-all" id="check-premium">
+                            <i class="fa-solid fa-check text-white text-[10px] opacity-0" id="icon-premium"></i>
                         </div>
                     </label>
+
                 </div>
             </div>
 
@@ -432,15 +429,14 @@
         const PRESSEL_ID = 200;
         const PIXELS_TO_TRACK = [{ "id": "1817379038816925" }];
         
-        // PREÇOS ATUALIZADOS: Oferta inicial, Primeira recusa (9.99), Segunda recusa (4.99)
-        const PRICES = { fixed: 16.99, discount1: 9.99, discount2: 4.99 };
-        const PACKAGES = ['fixed', 'custom'];
+        // PREÇOS ATUALIZADOS: Oferta inicial, Premium, Primeira recusa (9.99), Segunda recusa (4.99)
+        const PRICES = { fixed: 16.99, premium: 67.00, discount1: 9.99, discount2: 4.99 };
+        const PACKAGES = ['fixed', 'premium'];
 
         let currentPkg = 'fixed';
         let pixPollingInterval = null;
         let currentTransactionId = null;
         let globalClickId = null;
-        let customPriceBRL = 50; 
         let offerShown = false; 
 
         const isBot = () => /bot|facebook|crawler|spider|preview/i.test(navigator.userAgent);
@@ -538,7 +534,6 @@
             document.querySelectorAll('.preview-video').forEach(v => v.pause());
         }
 
-        // Função para fechar a primeira oferta e abrir a de R$ 4,99
         function showSecondBackRedirect() {
             const firstOverlay = document.getElementById('back-redirect-overlay');
             const secondOverlay = document.getElementById('second-back-redirect-overlay');
@@ -564,7 +559,6 @@
             }, 300);
         }
 
-        // Modificado para aceitar o nível da oferta (1 = 9.99, 2 = 4.99)
         function applyDiscountAndBuy(level) {
             closeBackRedirect();
             currentPkg = level === 1 ? 'discount1' : 'discount2';
@@ -582,7 +576,6 @@
                     icon.classList.replace('opacity-100', 'opacity-0');
                 }
             });
-            document.getElementById('custom-inputs').classList.add('hidden');
             
             updateCTAButton();
             processCheckout(); 
@@ -637,15 +630,6 @@
             }, 200);
         }
 
-        function handleCustomInput() {
-            const brlInput = document.getElementById('input-brl');
-            let val = parseFloat(brlInput.value);
-            if (isNaN(val) || val < 0) val = 0;
-            customPriceBRL = val;
-            
-            updateCTAButton();
-        }
-
         function updateSelection() {
             const selectedRadio = document.querySelector('input[name="package"]:checked');
             currentPkg = selectedRadio ? selectedRadio.value : 'fixed';
@@ -654,15 +638,12 @@
                 const card = document.getElementById(`card-${pkg}`);
                 const check = document.getElementById(`check-${pkg}`);
                 const icon = document.getElementById(`icon-${pkg}`);
-                const isCustom = pkg === 'custom';
 
                 if(!card) return;
 
-                card.className = "relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 border-of-border bg-white" + (isCustom ? " flex-col" : " pr-6");
-                check.className = "absolute border-2 border-of-border flex items-center justify-center transition-all " + (isCustom ? "right-4 top-4 w-5 h-5 rounded-full" : "right-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full");
+                card.className = "relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 border-of-border bg-white";
+                check.className = "absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 border-of-border flex items-center justify-center transition-all";
                 icon.classList.replace('opacity-100', 'opacity-0');
-                
-                if (isCustom) document.getElementById('custom-inputs').classList.add('hidden');
 
                 if (currentPkg === pkg) {
                     card.classList.replace('border-of-border', 'border-of-blue');
@@ -670,17 +651,6 @@
                     check.classList.replace('border-of-border', 'border-of-blue');
                     check.classList.add('bg-of-blue');
                     icon.classList.replace('opacity-0', 'opacity-100');
-                    
-                    if (isCustom) {
-                        document.getElementById('custom-inputs').classList.remove('hidden');
-                        document.getElementById('custom-inputs').classList.add('flex');
-                        
-                        const brlInput = document.getElementById('input-brl');
-                        if (!brlInput.value) {
-                            brlInput.value = customPriceBRL;
-                            handleCustomInput();
-                        }
-                    }
                 }
             });
 
@@ -688,26 +658,16 @@
         }
 
         function updateCTAButton() {
-            const brlPrice = currentPkg === 'custom' ? customPriceBRL : PRICES[currentPkg];
+            const brlPrice = PRICES[currentPkg];
             const ctaBtn = document.getElementById('cta-text');
             
-            if (brlPrice <= 0) {
-                ctaBtn.innerHTML = `Insira um valor`;
-                return;
-            }
-
             ctaBtn.innerHTML = `Pagar R$ ${brlPrice.toFixed(2).replace('.', ',')} no PIX`;
             document.getElementById('pix-modal-total').innerText = `R$ ${brlPrice.toFixed(2).replace('.', ',')}`;
         }
 
         async function processCheckout() {
-            const brlPrice = currentPkg === 'custom' ? customPriceBRL : PRICES[currentPkg];
+            const brlPrice = PRICES[currentPkg];
             
-            if (brlPrice <= 0) {
-                alert("Por favor, insira um valor válido para prosseguir.");
-                return;
-            }
-
             const btnSpan = document.getElementById('cta-text');
             const btnEl = document.querySelector('button[onclick="processCheckout()"]');
             const originalText = btnSpan.innerHTML;
@@ -834,7 +794,6 @@
                 </div>
             `;
             
-            // Opcional: Redirecionamento automático após 3 segundos
             setTimeout(() => {
                 window.location.href = 'https://t.me/pagamentoaprovadobot';
             }, 3000);
